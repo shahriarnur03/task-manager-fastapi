@@ -29,6 +29,11 @@ def update_task(task_id: int, update_data):
     return None 
 
 def delete_task(task_id: int):
+    # Without global, Python thinks tasks is a new local variable inside the function. global tasks is needed because you are reassigning the variable:
     global tasks
     tasks = [task for task in tasks if task["id"] != task_id]
     return True
+
+    # if i want to remove in place
+    # task[:] = [task for task in tasks if task["id"] != task_id]
+    # return True
