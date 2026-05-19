@@ -1,39 +1,45 @@
-tasks = []
-task_id_counter = 1
+from src.database.models import Task
 
-def create_task(task_data):
-    global task_id_counter
 
-    task = {
-        "id": task_id_counter,
-        "title": task_data.title,
-        "isCompleted": task_data.isCompleted
-    }
+def create_task(db, task_data):
+    task = Task(
+        title=task_data.title,
+        completed=task_data.isCompleted,
+    )
 
-    tasks.append(task)
-    task_id_counter +=1
+    
+    
+    db.add(task) # Prepare insert query
+    db.commit() # Actually save to DB. Without commit → nothing save
+    db.refresh(task) # Reload object from DB
+    
     return task
 
-def get_task():
-    return tasks
 
-def get_task_by_id(task_id: int):
-    return next((task for task in tasks if task["id"] == task_id), None)
+def get_task(db):
+    return db.query(Task).all()
 
-def update_task(task_id: int, update_data):
-    for task in tasks:
-        if task["id"] == task_id:
-            task["title"] = update_data.title
-            task["isCompleted"] = update_data.isCompleted
-            return task
-    return None 
 
-def delete_task(task_id: int):
-    # Without global, Python thinks tasks is a new local variable inside the function. global tasks is needed because you are reassigning the variable:
-    global tasks
-    tasks = [task for task in tasks if task["id"] != task_id]
+def get_task_by_id(task_id: int, db):
+    return db.query(Task).filter(Task.id == task_id).first()
+
+
+def update_task(task_id: int, update_data, db):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        return None
+
+    task.title = update_data.title
+    task.completed = update_data.isCompleted
+    db.commit()
+    db.refresh(task)
+    return task
+
+
+def delete_task(task_id: int, db):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        return False
+    db.delete(task)
+    db.commit()
     return True
-
-    # if i want to remove in place
-    # task[:] = [task for task in tasks if task["id"] != task_id]
-    # return True

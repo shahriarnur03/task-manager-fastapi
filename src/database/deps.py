@@ -4,6 +4,6 @@ def get_db():
     db = SessionLocal()
 
     try:
-        yield db
+        yield db # pause here, need to close manually
     finally:
         db.close()
